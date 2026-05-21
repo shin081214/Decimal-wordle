@@ -478,7 +478,7 @@ so.innerHTML=`<div style="max-width:520px;width:100%;display:flex;flex-direction
 <div style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:14px;padding:16px;text-align:center;">
 <div style="font-size:1.8rem;margin-bottom:6px;">💡</div>
 <p style="margin:0 0 4px;color:#00ff88;font-family:var(--fb);font-size:0.82rem;font-weight:700;">힌트 시스템</p>
-<p style="margin:0;color:var(--sub);font-size:0.72rem;line-height:1.5;">막혀서 고민하는 시간이 길어지면 <span style="color:#00ff88;font-weight:600;">초록색 정답</span>이 자동 공개!</p>
+<p style="margin:0;color:var(--sub);font-size:0.72rem;line-height:1.5;">30초가 지날 때마다 <span style="color:#00ff88;font-weight:600;">정답 타일</span> 자동 공개! (최대 2~4회)</p>
 </div>
 <div style="background:rgba(255,51,102,0.05);border:1px solid rgba(255,51,102,0.15);border-radius:14px;padding:16px;text-align:center;">
 <div style="font-size:1.8rem;margin-bottom:6px;">🎁</div>
