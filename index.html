@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word→Number Wordle</title>
+    <meta name="description" content="영어 단어를 숫자로 변환하여 맞추는 워들 게임">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div id="egg-bg"
+        style="position:fixed; inset:0; background:url('shin.webp') center/cover no-repeat; opacity:0; pointer-events:none; z-index:-1; transition: opacity 0.5s; display:none;">
+    </div>
+    <canvas id="particle-canvas"></canvas>
+    <div class="app" id="app">
+        <header class="header">
+            <button class="icon-btn" id="help-btn" title="도움말">?</button>
+            <div class="header-center" style="display:flex; flex-direction:column; align-items:center;">
+                <h1 class="title"><span class="t-main">WORD → NUMBER</span></h1>
+                <div style="display:flex; gap:10px; align-items:center; margin-top:2px;">
+                    <div id="jackpot-display"
+                        style="color:#ffcc00; font-family:var(--fb); font-size:0.85rem; text-shadow:0 0 5px #ffcc00; font-weight:700;">
+                        🔥 BOSS RATE: 1.0%</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="stats-btn" title="통계">📊</button>
+                <button class="icon-btn" id="settings-btn" title="설정">⚙</button>
+            </div>
+        </header>
+
+        <!-- Alphabet Reference -->
+        <div class="alpha-ref" id="alpha-ref"></div>
+
+        <!-- Info -->
+        <div class="info-bar">
+            <span class="info-tag">TIME: <strong id="time-display" style="color:var(--gold)">03:00</strong></span>
+            <span class="info-tag">WORD: <strong id="word-display">???</strong></span>
+            <span class="info-tag">HINT: <strong id="hint-text">💡</strong></span>
+            <span class="info-tag">STREAK: <strong id="streak-display">🔥0</strong></span>
+            <span class="info-tag" id="turn-display" style="display:inline">TURN: <strong id="turn-text"
+                    style="color:#00e5ff">P1</strong></span>
+        </div>
+
+        <div class="toast-container" id="toast-container"></div>
+        <main class="board" id="game-board"></main>
+
+        <!-- Keyboard -->
+        <div class="keyboard" id="keyboard">
+            <div class="kb-row">
+                <button class="key kd" data-key="1">1</button><button class="key kd" data-key="2">2</button>
+                <button class="key kd" data-key="3">3</button><button class="key kd" data-key="4">4</button>
+                <button class="key kd" data-key="5">5</button><button class="key kd" data-key="6">6</button>
+                <button class="key kd" data-key="7">7</button><button class="key kd" data-key="8">8</button>
+                <button class="key kd" data-key="9">9</button><button class="key kd" data-key="0">0</button>
+            </div>
+            <div class="kb-row">
+                <button class="key ka kdel" data-key="Backspace">⌫ 삭제</button>
+                <button class="key ka kent" data-key="Enter">↵ 확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>게임 방법</h2><button class="mcl" id="help-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>🎯 영어 단어를 <b>숫자 코드</b>로 변환한 값을 맞추세요!</p>
+                <p style="color:#00e5ff;margin:8px 0">A=01, B=02 ... Z=26 &nbsp; 예: LOVE → 12 15 22 05</p>
+                <p>🟩 초록 = 올바른 위치 &nbsp; 🟨 노랑 = 다른 위치 &nbsp; ⬛ 회색 = 없음</p>
+                <p>단어 길이는 3~7글자로 다양합니다!</p>
+            </div>
+        </div>
+    </div>
+    <!-- Stats Modal -->
+    <div class="modal-overlay" id="stats-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>📊 통계</h2><button class="mcl" id="stats-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sg">
+                    <div class="sb">
+                        <div class="sn" id="stat-played">0</div>
+                        <div class="sl">플레이</div>
+                    </div>
+                    <div class="sb">
+                        <div class="sn" id="stat-win-rate">0%</div>
+                        <div class="sl">승률</div>
+                    </div>
+                    <div class="sb">
+                        <div class="sn" id="stat-streak">0</div>
+                        <div class="sl">연승</div>
+                    </div>
+                    <div class="sb">
+                        <div class="sn" id="stat-max-streak">0</div>
+                        <div class="sl">최대연승</div>
+                    </div>
+                </div>
+                <div id="distribution-bars"></div>
+                <button class="ng-btn" id="new-game-btn">🔄 새 게임</button>
+            </div>
+        </div>
+    </div>
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2>⚙️ 설정</h2><button class="mcl" id="settings-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label class="srow"><span>경쟁 모드 (먼저 맞추면 승리)</span><input type="checkbox" id="coop-toggle"></label>
+                <label class="srow"><span>효과음</span><input type="checkbox" id="sound-toggle" checked></label>
+                <label class="srow"><span>매트릭스 배경</span><input type="checkbox" id="matrix-toggle" checked></label>
+                <label class="srow"><span>하드 모드 (힌트 숨김)</span><input type="checkbox" id="hard-toggle"></label>
+
+                <hr style="border:none; border-top:1px solid var(--border); margin:15px 0;">
+                <div style="margin-bottom: 10px; font-family:var(--fb); color:var(--cyan); font-weight:bold;">디버그 / 테스트
+                    설정</div>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <button id="test-boss8-btn" class="ng-btn"
+                        style="background:#ff3366; flex:1; font-size:0.85rem; box-shadow:0 0 10px #ff3366; padding:10px 0;">🚨
+                        8글자 보스</button>
+                    <button id="test-boss9-btn" class="ng-btn"
+                        style="background:#ff6633; flex:1; font-size:0.85rem; box-shadow:0 0 10px #ff6633; padding:10px 0;">🚨
+                        9글자 보스</button>
+                    <button id="test-egg-btn" class="ng-btn"
+                        style="background:#9933ff; flex:1; font-size:0.85rem; box-shadow:0 0 10px #9933ff; padding:10px 0;">🌟
+                        10글자 이스터</button>
+                </div>
+                <label class="srow" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; width:100%;">
+                        <span>보스 출현률 수동 조절</span>
+                        <span id="jackpot-val-display" style="color:#ffcc00; font-weight:bold;">1.0%</span>
+                    </div>
+                    <input type="range" id="jackpot-slider" min="0" max="100" step="0.5" value="1.0"
+                        style="width:100%; accent-color:#ffcc00;">
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="result-overlay" id="result-overlay">
+        <div id="egg-gifs" style="display:none; position:absolute; inset:0; pointer-events:none;">
+            <img src="maple.gif"
+                style="position:absolute; left:2%; top:50%; transform:translateY(-50%); width:500px; max-width:calc(50vw - 160px); height:auto; max-height:85vh; object-fit:contain; z-index:10;" />
+            <img src="maple.gif"
+                style="position:absolute; right:2%; top:50%; transform:translateY(-50%) scaleX(-1); width:500px; max-width:calc(50vw - 160px); height:auto; max-height:85vh; object-fit:contain; z-index:10;" />
+        </div>
+        <div class="result-content" id="result-content"></div>
+    </div>
+    <script src="game.js"></script>
+</body>
+
+</html>
